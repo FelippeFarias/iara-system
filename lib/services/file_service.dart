@@ -6,10 +6,10 @@ import 'dart:isolate';
 import 'package:get/get.dart';
 import 'package:iara/enum/connection_status.dart';
 import 'package:iara/interfaces/connection_interface.dart';
-import 'package:iara/providers/iara_meet_communicator%20.dart';
 import 'package:logger/logger.dart';
 import 'package:watcher/watcher.dart';
 
+import '../providers/iara_meet_communicator.dart';
 import '../ui/screens/connection/controllers/connection_controller.dart';
 
 class FileService extends ConnectionInterface{
@@ -17,15 +17,14 @@ class FileService extends ConnectionInterface{
   final String receiveFilePath;
   final INVALID_FILE_ATTRIBUTES = -1;
   final infoConnectionText = "".obs;
-  final textData = "".obs;
+  final rxData = Rx<dynamic>('');
+  final detailsStr = "".obs;
   final connecting = false.obs;
   var status = ConnectionStatus.disconnected.obs;
   late IaraMeetCommunicator imc;
   final _connectionController = Get.find<ConnectionController>();
 
-  GetStream<dynamic> stream = GetStream<dynamic>();
-
-  FileService(this.sendFilePath, this.receiveFilePath) {_initIsolate();}
+  FileService(this.sendFilePath, this.receiveFilePath) {_init();}
 
   Future<void> writeFile(String data, String filePath) async {
     var file = File(filePath);
@@ -42,8 +41,7 @@ class FileService extends ConnectionInterface{
     await file.delete();
   }
 
-  Future<void> _initIsolate() async {
-    var count = 0;
+  Future<void> _init() async {
     imc = IaraMeetCommunicator(this);
     _connectionController.connection = this;
     final watcher = FileWatcher(sendFilePath);
@@ -51,15 +49,19 @@ class FileService extends ConnectionInterface{
     watcherReceiveFile.events.listen((event) async  {
       if (event.type == ChangeType.MODIFY) {
         var value = await readFile(receiveFilePath);
-        onData(jsonEncode({'file': 'receive', 'data': value}));
+
       }
     });
     watcher.events.listen((event) async {
       if (event.type == ChangeType.MODIFY) {
         var value = await readFile(sendFilePath);
-        onData(jsonEncode({'file': 'receive', 'data': value}));
+        var event = await imc.handleResponse(value);
+        if (event.type == 'version') {
+          detailsStr.value = event.data;
+        }
 
-        imc.handleResponse(value);
+        onData(event );
+
 
       }
     });
@@ -92,8 +94,8 @@ class FileService extends ConnectionInterface{
   }
 
   @override
-  void onData(String data) {
-    textData.value  = data.trim();
+  void onData(dynamic data) {
+    rxData.value  = data ;
   }
 
   @override
@@ -102,12 +104,12 @@ class FileService extends ConnectionInterface{
   }
 
   @override
-  RxString streamData() {
-    return textData;
+  Rx<dynamic> streamData() {
+    return rxData;
   }
 
   @override
-  String get details => '';
+  String get details => detailsStr.value;
 
   @override
   String get name => 'File Service';

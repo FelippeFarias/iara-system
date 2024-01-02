@@ -8,6 +8,7 @@ class Constants {
   static const String splashSendFileName = "splash_send.txt";
   static const String splashReceiveFileName = "splash_receive.txt";
   static var KEY_LOCALE = "KEY_LOCALE";
+  static var KEY_DIR = "KEY_DIR";
 
 
   static const kPrimaryColor = Color(0xff004a83);

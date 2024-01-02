@@ -1,4 +1,5 @@
 import 'package:flenex/flenex.dart';
+import 'package:iara/models/event_meet_manager.dart';
 import 'package:iara/utils/file_utils.dart';
 import 'package:logger/logger.dart';
 
@@ -55,47 +56,58 @@ class IaraMeetCommunicator {
     await fileService.writeFile(message, fileService.sendFilePath);
   }
 
-  Future<void>  handleResponse(String data) async  {
+  Future<EventMeetMannager> handleResponse(String data) async  {
     var lines = data.split('\n');
     for (var line in lines) {
       if (line.startsWith('VERSION;')) {
-        _handleVersionResponse(line);
-        break;
+        return await _handleVersionResponse(line);
       } else if (line.startsWith('DOWNLOAD EVENT;')) {
-        _handleDownloadEventResponse(line,data);
+        return await _handleDownloadEventResponse(line,data);
       } else if (line.startsWith('SEND NAMES;')) {
-        _handleSendNamesResponse(line);
+        return await _handleSendNamesResponse(line,data);
       } else if (line.startsWith('SEND RESULTS;')) {
-        _handleSendResultsResponse(line);
+        return await  _handleSendResultsResponse(line,data);
       } else if (line.startsWith('STATUS;')) {
-        _handleStatusResponse(line);
+        return await  _handleStatusResponse(line,data);
+      }else {
+        return EventMeetMannager(type: 'error', data: 'Resposta desconhecida');
       }
       // Adicionar mais condições conforme necessário
     }
+    return EventMeetMannager(type: 'error', data: 'Resposta desconhecida');
   }
 
-  Future<void> _handleDownloadEventResponse(String line,String data) async {
+  Future<EventMeetMannager> _handleDownloadEventResponse(String line,String data) async {
     try {
-      Logger().d(await flenex.extractXml(data));
-      var lenex = await flenex.parseStringXml(data);
-      Logger().d(lenex);
 
-      // Respostas possíveis: DOWNLOAD EVENT;OK, DOWNLOAD EVENT;ABORT, DOWNLOAD EVENT;BUSY
-      if (line.contains('DOWNLOAD EVENT;OK')) {
-        // Lógica para tratamento de evento baixado com sucesso
-      } else if (line.contains('DOWNLOAD EVENT;ABORT')) {
-        // Lógica para tratamento de evento abortado
-      } else if (line.contains('DOWNLOAD EVENT;BUSY')) {
-        // Lógica para tratamento de evento ocupado
-      }
+      var lenex = await flenex.read(data, 'text/xml');
+
+      await fileService.writeFile('', fileService.sendFilePath);
+
+      // Lógica para processar o evento
+      // aqui dever ser realizado a verificação do status do modulo
+
+      // Se o modulo de eventos estiver disponível, o evento será baixado
+      // fileService.writeFile('DOWNLOAD EVENT;OK', fileService.receiveFilePath);
+
+      // Se o modulo de eventos não estiver disponível, o evento não será baixado
+      // fileService.writeFile('DOWNLOAD EVENT;ABORT', fileService.receiveFilePath);
+
+      // Se o modulo de eventos estiver ocupado, o evento não será baixado
+      // fileService.writeFile('DOWNLOAD EVENT;BUSY', fileService.receiveFilePath);
+
+      fileService.writeFile('DOWNLOAD EVENT;OK', fileService.receiveFilePath);
+      return EventMeetMannager(data:lenex, type: 'downloadEvent');
     } catch (e, stackTrace) {
       Logger().d(e,stackTrace: stackTrace);
+      return EventMeetMannager( type: 'error', data: e.toString());
     }
   }
 
 
 
-  void _handleSendNamesResponse(String line) {
+  Future<EventMeetMannager> _handleSendNamesResponse(String line,String data) async  {
+    return EventMeetMannager(data: data, type: 'sendNames');
     // Início e fim da transmissão de nomes: SEND NAMES;START, SEND NAMES;END
     if (line.contains('SEND NAMES;START')) {
       // Lógica para iniciar o processamento de nomes
@@ -104,11 +116,15 @@ class IaraMeetCommunicator {
     }
   }
 
-  void _handleVersionResponse(String line) {
-    sendInitializationMessage();
+  Future<EventMeetMannager> _handleVersionResponse(String line) async {
+    String initMessage = 'VERSION;IARA System v1.0.0\n';
+    await fileService.writeFile('', fileService.sendFilePath);
+    await fileService.writeFile(initMessage, fileService.receiveFilePath);
+    return  EventMeetMannager(data: line.trim().replaceAll('VERSION;', ''), type: 'version');
   }
 
-  void _handleSendResultsResponse(String line) {
+  Future<EventMeetMannager> _handleSendResultsResponse(String line, String data) async {
+    return EventMeetMannager(data: data, type: 'sendResults');
     // Respostas possíveis: SEND RESULTS;START, SEND RESULTS;END, SEND RESULTS;NOT FOUND
     if (line.contains('SEND RESULTS;START')) {
       // Lógica para iniciar o processamento de resultados
@@ -119,7 +135,8 @@ class IaraMeetCommunicator {
     }
   }
 
-  void _handleStatusResponse(String line) {
+  Future<EventMeetMannager  > _handleStatusResponse(String line ,String data) async {
+    return EventMeetMannager(data: data, type: 'status');
     // Exemplo: STATUS;EVENTID=123;HEATID=456;START
     // Lógica: Extrair informações de status e processar conforme necessário
   }

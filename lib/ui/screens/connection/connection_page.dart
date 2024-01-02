@@ -1,6 +1,7 @@
 
 import 'package:iara/ui/screens/serial/serial_page.dart';
 import 'package:iara/ui/screens/socket/socket_page.dart';
+import 'package:iara/ui/screens/status/meet_connection_screen.dart';
 import 'package:iara/utils/asset_paths.dart';
 import 'package:iara/utils/theme.dart';
 import 'package:fluent_ui/fluent_ui.dart';
@@ -23,6 +24,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
     return TabView(
 
       tabs: [
+        Tab(
+          text: const Text('Meet Manager'),
+          semanticLabel: 'Meet Manager',
+          icon: const Icon( FluentIcons.timer),
+          body: Container(
+              decoration:  BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color:  _appTheme.cardColor,
+              ),
+              padding: const EdgeInsets.all(20.0),
+              child:   MeetConnectionPage()),
+        ),
         Tab(
 
         text: const Text('Socket'),

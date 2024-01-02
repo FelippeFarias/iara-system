@@ -11,10 +11,10 @@ abstract class ConnectionInterface {
 
   void onError(dynamic error);
 
-  void onData(String data);
+  void onData(dynamic data);
 
   ConnectionStatus getStatus();
   String get name;
   String get details;
-  RxString streamData();
+  Rx<dynamic> streamData();
 }

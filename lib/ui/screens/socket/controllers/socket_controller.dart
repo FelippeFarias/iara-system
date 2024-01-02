@@ -93,7 +93,7 @@ class SocketController extends GetxController implements  ConnectionInterface {
   }
 
   @override
-  void onData(String data) {
+  void onData(dynamic data) {
     textData.value  = data.trim();
     tc.print(message: textData.value, endline: true);
   }

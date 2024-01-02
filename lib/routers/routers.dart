@@ -4,8 +4,8 @@ import 'package:iara/ui/screens/connection/controllers/connection_binding.dart';
 import 'package:iara/ui/screens/serial/controllers/serial_binding.dart';
 import 'package:iara/ui/screens/settings/controllers/settings_binding.dart';
 import 'package:iara/ui/screens/settings/settings_screen.dart';
-import 'package:iara/ui/screens/status/controllers/status_binding.dart';
-import 'package:iara/ui/screens/status/status_screen.dart';
+import 'package:iara/ui/screens/status/controllers/meet_connection_binding.dart';
+import 'package:iara/ui/screens/status/meet_connection_screen.dart';
 import 'package:get/get.dart';
 
 import '../ui/screens/base/controllers/base_binding.dart';
@@ -21,8 +21,9 @@ abstract class Routers {
       transition: transaction,
       bindings: [
         BaseBinding(),
-        HomeBinding(),
         ConnectionBinding(),
+        HomeBinding(),
+
       ],
     ),
     GetPage(
@@ -34,11 +35,11 @@ abstract class Routers {
       ],
     ),
     GetPage(
-      page: () => StatusScreen(),
-      name: PagesRoutes.statusRoute,
+      page: () => MeetConnectionPage(),
+      name: PagesRoutes.meetConnectionRoute,
       transition: transaction,
       bindings: [
-        StatusBinding(),
+        MeetConnectionBinding(),
       ],
     ),
   ];
@@ -48,6 +49,6 @@ abstract class PagesRoutes {
   static const String baseRoute = '/base';
   static const String homeRoute = '/home';
   static const String settingsRoute = '/settings';
-  static const String statusRoute = '/status';
+  static const String meetConnectionRoute = '/meetConnection';
 
 }
